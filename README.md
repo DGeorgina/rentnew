@@ -2,10 +2,7 @@
 
 A new Flutter project.
 This project is designed to help people rent something that they don't use. It uses the Firebase platform for authentication and database.
-Design pattern:
--Singleton
--Service locator
--Composition-based software architecture
+Design pattern: Singleton, Service locator, Composition-based software architecture
 
 ## Getting Started
 
