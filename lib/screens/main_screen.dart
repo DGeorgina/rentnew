@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../model/product.dart';
 import 'package:get_it/get_it.dart';
-
+import 'package:image_picker/image_picker.dart';
 import '../service/AuthenticationService.dart';
 import '../widgets/sign_in.dart';
+import 'dart:io';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,8 +16,20 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   List<Product> _products = [];
+  late File _selectedImage = File('');
   final firebaseSingletonInstance = GetIt.I.get<AuthenticationService>();
   bool userSignedIn = false;
+
+  Future _pickImageFromCamera() async {
+    final returnedImage =
+    await ImagePicker().pickImage(source: ImageSource.camera);
+
+    if (returnedImage != null) {
+      setState(() {
+        _selectedImage = File(returnedImage.path);
+      });
+    }
+  }
 
   @override
   void initState() {
