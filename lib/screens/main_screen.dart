@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../model/product.dart';
 import 'package:get_it/get_it.dart';
-import 'package:image_picker/image_picker.dart';
 import '../service/AuthenticationService.dart';
 import '../widgets/sign_in.dart';
-import 'dart:io';
+import 'package:location/location.dart';
+import 'dart:math' show cos, sqrt, asin;
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,25 +16,14 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   List<Product> _products = [];
-  late File _selectedImage = File('');
+  double distanceToCurrentLocation = -1;
   final firebaseSingletonInstance = GetIt.I.get<AuthenticationService>();
   bool userSignedIn = false;
-
-  Future _pickImageFromCamera() async {
-    final returnedImage =
-    await ImagePicker().pickImage(source: ImageSource.camera);
-
-    if (returnedImage != null) {
-      setState(() {
-        _selectedImage = File(returnedImage.path);
-      });
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    // setProductToDatabase(Product(1, "Microwave", "1 year old","ul. Ruger Boskovik 16 1000, Rugjer Boshkovikj 16, Skopje 1000"));
+    // setProductToDatabase(Product(3, "Bike", "5 year old","ul. Partizanski Odredi"));
     getProductsFromDatabase();
     userSignedIn = (firebaseSingletonInstance.currentUser() != null);
   }
@@ -124,44 +113,99 @@ class _MainScreenState extends State<MainScreen> {
                       Icons.play_arrow_outlined,
                       color: Colors.green,
                     )),
+
         ],
       ),
-      body: GridView.builder(
-        itemCount: _products.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              title: Text(
-                _products[index].name,
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepPurpleAccent),
-              ),
-              subtitle: Text(
-                _products[index].description,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_rounded),
-                onPressed: () {
-                  setState(() {
-                    _products.removeAt(index);
-                  });
-                },
-              ),
+      body: Column(children: [
+        if (distanceToCurrentLocation == -1)
+          TextButton(onPressed:()=> calculateDistance(), child: const Text("Show distance"))
+        else
+          Text('The distance is: $distanceToCurrentLocation km'),
+        TextButton(onPressed: () {}, child: const Text("Profile")),
+        Expanded(
+          child: GridView.builder(
+            itemCount: _products.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    _products[index].name,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurpleAccent),
+                  ),
+                  subtitle: Text(
+                    _products[index].description,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.grey),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_rounded),
+                    onPressed: () {
+                      setState(() {
+                        _products.removeAt(index);
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, // number of items in each row
+              mainAxisSpacing: 8.0, // spacing between rows
+              crossAxisSpacing: 8.0, // spacing between columns
             ),
-          );
-        },
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // number of items in each row
-          mainAxisSpacing: 8.0, // spacing between rows
-          crossAxisSpacing: 8.0, // spacing between columns
+          ),
         ),
-      ),
+      ]),
     );
+  }
+
+  void calculateDistance() async {
+    Location location = new Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+    LocationData _locationData;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+
+    double? lat1 = _locationData.latitude;
+    double? lon1 = _locationData.longitude;
+
+    double lat2 = 42.0046584;
+    double lon2 = 21.4092858;
+
+    if (lat1 != null && lon1 != null) {
+      var p = 0.017453292519943295;
+      var c = cos;
+      var a = 0.5 -
+          c((lat2 - lat1) * p) / 2 +
+          c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
+      double distance = 12742 * asin(sqrt(a));
+
+      setState(() {
+        distanceToCurrentLocation=distance;
+      });
+    }
   }
 }
