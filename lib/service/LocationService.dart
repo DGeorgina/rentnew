@@ -34,8 +34,6 @@ class LocationService {
     double? lat1 = _locationData.latitude;
     double? lon1 = _locationData.longitude;
 
-    // double lat2 = 42.0046584;
-    // double lon2 = 21.4092858;
 
     if (lat1 != null && lon1 != null) {
       var p = 0.017453292519943295;

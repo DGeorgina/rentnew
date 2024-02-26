@@ -1,19 +1,23 @@
 import 'dart:io';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class UserProfile extends StatelessWidget {
-  final File? selectedImage;
 
-  UserProfile({Key? key, required this.selectedImage}) : super(key: key);
+  final File? selectedImage;
+  final String username;
+
+  UserProfile({Key? key, required this.selectedImage, required this.username})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.orange,
+      color: Colors.grey,
       width: 200,
       height: 200,
-      margin: EdgeInsets.only(right: 180),
+      margin: const EdgeInsets.only(right: 180),
       alignment: Alignment.bottomLeft,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -26,14 +30,18 @@ class UserProfile extends StatelessWidget {
               child: Image.file(selectedImage!, fit: BoxFit.cover),
             )
           else
-            Text("No Image so far"),
-            SizedBox(height: 8,),
+            const Text("No Image so far"),
+          const SizedBox(
+            height: 8,
+          ),
           Row(
             children: [
-              Text("Name"),
-              SizedBox(width: 8),
-              Text("Surname"),
-              SizedBox(width: 8),
+              if (username.length > 19)
+                Text("${username.substring(0, 19)}...")
+              else
+                Text(username),
+              // SizedBox(width: 1),
+
               IconButton(
                 onPressed: () {
                   // Add edit button functionality here
@@ -46,57 +54,24 @@ class UserProfile extends StatelessWidget {
       ),
     );
   }
-}
 
-// import 'dart:io';
-//
-// import 'package:flutter/material.dart';
-//
-// class UserProfile extends StatefulWidget {
-//   final File ? selectedImage;
-//
-//   const UserProfile({super.key, required this.selectedImage});
-//
-//   @override
-//   State<UserProfile> createState() => _UserProfileState();
-// }
-//
-// class _UserProfileState extends State<UserProfile> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('User Profile'),
-//       ),
-//       body: Container(
-//         width: 200, // Specify the width
-//         height: 200, // Specify the height
-//         alignment: Alignment.bottomLeft, // Align the content to the bottom left
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.end,
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             widget.selectedImage != null
-//                 ? Image.file(widget.selectedImage!)
-//                 : Text("No Image so far"),
-//             SizedBox(height: 8),
-//             Row(
-//               children: [
-//                 Text("Name"),
-//                 SizedBox(width: 8),
-//                 Text("Surname"),
-//                 SizedBox(width: 8),
-//                 IconButton(
-//                   onPressed: () {
-//                     // Add edit button functionality here
-//                   },
-//                   icon: const Icon(Icons.edit),
-//                 ),
-//               ],
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+    await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (returnedImage == null) return;
+    // setState(() {
+    //   selectedImage = File(returnedImage!.path);
+    // });
+
+    // Create a storage reference from our app
+    // final storageRef = FirebaseStorage.instance.ref();
+
+
+// Create a reference to 'images/mountains.jpg'
+//     final mountainImagesRef = storageRef.child("images/mountains.jpg");
+
+
+  }
+}

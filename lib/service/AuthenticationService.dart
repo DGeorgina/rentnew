@@ -5,6 +5,15 @@ class AuthenticationService {
     return FirebaseAuth.instance.currentUser;
   }
 
+  String getCurrentUserEmail(){
+    String? mail;
+    if(currentUser()?.email!=null) {
+      mail=currentUser()?.email;
+    }
+    if(mail==null) return "";
+    return mail;
+  }
+
   signOut() async {
     await FirebaseAuth.instance.signOut();
   }

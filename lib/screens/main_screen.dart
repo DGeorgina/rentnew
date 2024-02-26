@@ -134,9 +134,10 @@ class _MainScreenState extends State<MainScreen> {
               _pickImageFromGallery();
             },
             child: Text("pick img")),
-        UserProfile(
-          selectedImage: _selectedImage,
-        ),
+        if (userSignedIn)
+          UserProfile(
+              selectedImage: _selectedImage,
+              username: firebaseSingletonInstance.getCurrentUserEmail()),
         const SizedBox(height: 10),
         Expanded(
           child: GridView.builder(
