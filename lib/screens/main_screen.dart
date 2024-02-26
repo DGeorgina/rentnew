@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../model/product.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:rentnew/model/product.dart';
 import 'package:get_it/get_it.dart';
 import '../service/AuthenticationService.dart';
 import '../widgets/sign_in.dart';
-import 'package:location/location.dart';
-import 'dart:math' show cos, sqrt, asin;
+import 'package:rentnew/ui/user_profile.dart';
+import 'package:rentnew/ui/item.dart';
+import 'package:rentnew/service/LocationService.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,10 +22,13 @@ class _MainScreenState extends State<MainScreen> {
   double distanceToCurrentLocation = -1;
   final firebaseSingletonInstance = GetIt.I.get<AuthenticationService>();
   bool userSignedIn = false;
+  File? _selectedImage;
+  LocationService? locationService;
 
   @override
   void initState() {
     super.initState();
+    locationService = LocationService(setDistance: setDistance);
     // setProductToDatabase(Product(3, "Bike", "5 year old","ul. Partizanski Odredi"));
     getProductsFromDatabase();
     userSignedIn = (firebaseSingletonInstance.currentUser() != null);
@@ -113,44 +119,31 @@ class _MainScreenState extends State<MainScreen> {
                       Icons.play_arrow_outlined,
                       color: Colors.green,
                     )),
-
         ],
       ),
       body: Column(children: [
         if (distanceToCurrentLocation == -1)
-          TextButton(onPressed:()=> calculateDistance(), child: const Text("Show distance"))
+          TextButton(
+              onPressed: () =>
+                  locationService?.calculateDistance(42.0046584, 21.409285),
+              child: const Text("Show distance"))
         else
           Text('The distance is: $distanceToCurrentLocation km'),
-        TextButton(onPressed: () {}, child: const Text("Profile")),
+        TextButton(
+            onPressed: () {
+              _pickImageFromGallery();
+            },
+            child: Text("pick img")),
+        UserProfile(
+          selectedImage: _selectedImage,
+        ),
+        const SizedBox(height: 10),
         Expanded(
           child: GridView.builder(
             itemCount: _products.length,
             itemBuilder: (context, index) {
-              return Card(
-                child: ListTile(
-                  title: Text(
-                    _products[index].name,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurpleAccent),
-                  ),
-                  subtitle: Text(
-                    _products[index].description,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.grey),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_rounded),
-                    onPressed: () {
-                      setState(() {
-                        _products.removeAt(index);
-                      });
-                    },
-                  ),
-                ),
+              return Item(
+                product: _products.elementAt(index),
               );
             },
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -164,48 +157,19 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void calculateDistance() async {
-    Location location = new Location();
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
 
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-    LocationData _locationData;
+    if (returnedImage == null) return;
+    setState(() {
+      _selectedImage = File(returnedImage!.path);
+    });
+  }
 
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        return;
-      }
-    }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    _locationData = await location.getLocation();
-
-    double? lat1 = _locationData.latitude;
-    double? lon1 = _locationData.longitude;
-
-    double lat2 = 42.0046584;
-    double lon2 = 21.4092858;
-
-    if (lat1 != null && lon1 != null) {
-      var p = 0.017453292519943295;
-      var c = cos;
-      var a = 0.5 -
-          c((lat2 - lat1) * p) / 2 +
-          c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
-      double distance = 12742 * asin(sqrt(a));
-
-      setState(() {
-        distanceToCurrentLocation=distance;
-      });
-    }
+  void setDistance(double distance) {
+    setState(() {
+      distanceToCurrentLocation = distance;
+    });
   }
 }
