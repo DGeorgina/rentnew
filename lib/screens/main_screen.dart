@@ -9,6 +9,7 @@ import '../widgets/sign_in.dart';
 import 'package:rentnew/ui/user_profile.dart';
 import 'package:rentnew/ui/item.dart';
 import 'package:rentnew/service/LocationService.dart';
+import 'package:rentnew/service/ImageService.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
   double distanceToCurrentLocation = -1;
   final firebaseSingletonInstance = GetIt.I.get<AuthenticationService>();
   bool userSignedIn = false;
-  File? _selectedImage;
+  String _selectedImage = "";
   LocationService? locationService;
 
   @override
@@ -32,6 +33,22 @@ class _MainScreenState extends State<MainScreen> {
     // setProductToDatabase(Product(3, "Bike", "5 year old","ul. Partizanski Odredi"));
     getProductsFromDatabase();
     userSignedIn = (firebaseSingletonInstance.currentUser() != null);
+    initializeProfilePicture();
+  }
+
+  initializeProfilePicture() {
+    if (firebaseSingletonInstance.getCurrentUserEmail().isNotEmpty) {
+      ImageService()
+          .getImageDownloadUrl(
+              "images/${firebaseSingletonInstance.getCurrentUserEmail()}.jpg")
+          .then((value) => _selectedImage = value);
+    }
+  }
+
+  getProfileImage(String downloadUrl) {
+    setState(() {
+      _selectedImage = downloadUrl;
+    });
   }
 
   void getProductsFromDatabase() async {
@@ -136,8 +153,10 @@ class _MainScreenState extends State<MainScreen> {
             child: Text("pick img")),
         if (userSignedIn)
           UserProfile(
-              selectedImage: _selectedImage,
-              username: firebaseSingletonInstance.getCurrentUserEmail()),
+            profileImage: _selectedImage,
+            username: firebaseSingletonInstance.getCurrentUserEmail(),
+            updateProfileImage: getProfileImage,
+          ),
         const SizedBox(height: 10),
         Expanded(
           child: GridView.builder(
@@ -164,7 +183,7 @@ class _MainScreenState extends State<MainScreen> {
 
     if (returnedImage == null) return;
     setState(() {
-      _selectedImage = File(returnedImage!.path);
+      //_selectedImage = File(returnedImage!.path);
     });
   }
 

@@ -4,10 +4,9 @@ import 'package:rentnew/screens/main_screen.dart';
 import 'package:rentnew/service/AuthenticationService.dart';
 import 'firebase_options.dart';
 import 'package:get_it/get_it.dart';
+
 //GetIt.I.get<AuthenticationService>();
 Future<void> main() async {
-
-
 // Alternatively you could write it if you don't like global variables
   GetIt.I.registerSingleton<AuthenticationService>(AuthenticationService());
 
@@ -21,7 +20,6 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
 
   @override
   Widget build(BuildContext context) {

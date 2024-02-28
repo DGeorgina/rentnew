@@ -5,12 +5,12 @@ class AuthenticationService {
     return FirebaseAuth.instance.currentUser;
   }
 
-  String getCurrentUserEmail(){
+  String getCurrentUserEmail() {
     String? mail;
-    if(currentUser()?.email!=null) {
-      mail=currentUser()?.email;
+    if (currentUser()?.email != null) {
+      mail = currentUser()?.email;
     }
-    if(mail==null) return "";
+    if (mail == null) return "";
     return mail;
   }
 
@@ -35,7 +35,7 @@ class AuthenticationService {
   Future<void> register(String inputEmail, String inputPass) async {
     try {
       final credential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: inputEmail,
         password: inputPass,
       );

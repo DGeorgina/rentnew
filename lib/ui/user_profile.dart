@@ -1,14 +1,22 @@
 import 'dart:io';
+import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:rentnew/service/AuthenticationService.dart';
+import 'package:rentnew/service/ImageService.dart';
 
 class UserProfile extends StatelessWidget {
-
-  final File? selectedImage;
+  final String profileImage;
   final String username;
+  final Function updateProfileImage;
+  final firebaseSingletonInstance = GetIt.I.get<AuthenticationService>();
 
-  UserProfile({Key? key, required this.selectedImage, required this.username})
+  UserProfile(
+      {Key? key,
+      required this.profileImage,
+      required this.username,
+      required this.updateProfileImage})
       : super(key: key);
 
   @override
@@ -23,12 +31,13 @@ class UserProfile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (selectedImage != null)
+          if (profileImage != "")
             Container(
-              width: 200, // Set the width you desire
-              height: 140, // Set the height you desire
-              child: Image.file(selectedImage!, fit: BoxFit.cover),
-            )
+                width: 200, // Set the width you desire
+                height: 140, // Set the height you desire
+                child: Image.network(
+                    profileImage) //Image.file(selectedImage!, fit: BoxFit.cover),
+                )
           else
             const Text("No Image so far"),
           const SizedBox(
@@ -44,6 +53,7 @@ class UserProfile extends StatelessWidget {
 
               IconButton(
                 onPressed: () {
+                  _pickImageFromGallery();
                   // Add edit button functionality here
                 },
                 icon: const Icon(Icons.edit),
@@ -55,10 +65,9 @@ class UserProfile extends StatelessWidget {
     );
   }
 
-
   Future _pickImageFromGallery() async {
     final returnedImage =
-    await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (returnedImage == null) return;
     // setState(() {
@@ -67,11 +76,13 @@ class UserProfile extends StatelessWidget {
 
     // Create a storage reference from our app
     // final storageRef = FirebaseStorage.instance.ref();
+    File img = File(returnedImage!.path);
+    String downloadUrl=await ImageService().uploadImageToFirebase(
+        img, "images/${firebaseSingletonInstance.getCurrentUserEmail()}.jpg");
 
+    updateProfileImage(downloadUrl);
 
 // Create a reference to 'images/mountains.jpg'
 //     final mountainImagesRef = storageRef.child("images/mountains.jpg");
-
-
   }
 }
