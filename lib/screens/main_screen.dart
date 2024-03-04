@@ -8,6 +8,7 @@ import 'package:rentnew/ui/user_profile.dart';
 import 'package:rentnew/ui/item.dart';
 import 'package:rentnew/service/LocationService.dart';
 import 'package:rentnew/service/ImageService.dart';
+import 'package:rentnew/widgets/new_item.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -39,7 +40,11 @@ class _MainScreenState extends State<MainScreen> {
       ImageService()
           .getImageDownloadUrl(
               "images/${firebaseSingletonInstance.getCurrentUserEmail()}.jpg")
-          .then((value) => _selectedImage = value);
+          .then((value) => _selectedImage = value)
+          .catchError((error) {
+        print("errorrr");
+      });
+      print(_selectedImage);
     }
   }
 
@@ -58,8 +63,12 @@ class _MainScreenState extends State<MainScreen> {
         for (final child in snapshot.children) {
           Map<dynamic, dynamic> values = child.value as Map<dynamic, dynamic>;
 
-          Product prod = Product(values["id"], values["name"],
-              values["description"], values["location"]);
+          Product prod = Product(
+              values["id"],
+              values["name"],
+              values["description"],
+              values["location"],
+              values["editPrivilege"]);
 
           setState(() {
             _products.add(prod);
@@ -81,7 +90,8 @@ class _MainScreenState extends State<MainScreen> {
       "id": product.id,
       "name": product.name,
       "description": product.description,
-      "location": product.position
+      "location": product.position,
+      "editPrivilege": product.editPrivilege
     });
   }
 
@@ -125,6 +135,13 @@ class _MainScreenState extends State<MainScreen> {
         title: Text(userSignedIn ? 'logged in' : 'logged out'),
         backgroundColor: Theme.of(context).colorScheme.outlineVariant,
         actions: [
+          if (userSignedIn)
+            IconButton(
+                onPressed: () => _addNewItemFunction(),
+                icon: const Icon(
+                  Icons.add_circle_rounded,
+                  color: Colors.green,
+                )),
           TextButton(
             onPressed: () => (userSignedIn) ? _signOut() : _signIn(),
             child: Text(userSignedIn ? 'Log out' : 'Log in'),
@@ -133,7 +150,6 @@ class _MainScreenState extends State<MainScreen> {
               backgroundColor: MaterialStateProperty.all(Colors.blue),
             ),
           ),
-
         ],
       ),
       body: Column(children: [
@@ -168,6 +184,28 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ]),
     );
+  }
+
+  void _addNewItemFunction() {
+    showModalBottomSheet(
+        context: context,
+        builder: (_) {
+          return GestureDetector(
+            onTap: () {},
+            behavior: HitTestBehavior.opaque,
+            child: NewItem(
+              //widgetot za dodavanje na nov item so se naoga vo folderot /widgets
+              addItem: _addNewItemToListAndDatabase,
+            ),
+          );
+        });
+  }
+
+  void _addNewItemToListAndDatabase(Product product) {
+    setState(() {
+      _products.add(product);
+    });
+    setProductToDatabase(product);
   }
 
   void setDistance(double distance) {

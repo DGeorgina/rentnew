@@ -3,6 +3,8 @@ class Product {
   String name;
   String description;
   String position;
+  String editPrivilege;
 
-  Product(this.id, this.name, this.description, this.position);
+  Product(
+      this.id, this.name, this.description, this.position, this.editPrivilege);
 }
