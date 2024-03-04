@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:rentnew/service/AuthenticationService.dart';
 import 'package:rentnew/service/ImageService.dart';
 
@@ -67,7 +66,7 @@ class UserProfile extends StatelessWidget {
 
   Future _pickImageFromGallery() async {
     final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.camera);
 
     if (returnedImage == null) return;
     // setState(() {

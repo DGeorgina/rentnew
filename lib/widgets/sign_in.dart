@@ -42,13 +42,14 @@ class _SignInState extends State<SignIn> {
         children: [
           TextField(
             controller: _emailController,
-            decoration: InputDecoration(labelText: "Emailll:"),
+            decoration: InputDecoration(labelText: "Email:"),
             onSubmitted: (_) => _submitData,
           ),
           TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: "Passworddd:"),
-              onSubmitted: (_) => _submitData),
+              decoration: InputDecoration(labelText: "Password:"),
+              onSubmitted: (_) => _submitData,
+              obscureText: true),
           ElevatedButton(
             clipBehavior: Clip.antiAliasWithSaveLayer,
             onPressed: _submitData,

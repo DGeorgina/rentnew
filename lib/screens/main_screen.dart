@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:rentnew/model/product.dart';
 import 'package:get_it/get_it.dart';
 import '../service/AuthenticationService.dart';
@@ -89,11 +87,13 @@ class _MainScreenState extends State<MainScreen> {
 
   void _updateSignIn() {
     print("the user is signed in-----");
-    print(firebaseSingletonInstance.currentUser() != null);
+    bool val = firebaseSingletonInstance.currentUser() != null;
+    print(val);
     print("donne");
     setState(() {
       userSignedIn = (firebaseSingletonInstance.currentUser() != null);
     });
+    initializeProfilePicture();
   }
 
   _signIn() {
@@ -125,17 +125,15 @@ class _MainScreenState extends State<MainScreen> {
         title: Text(userSignedIn ? 'logged in' : 'logged out'),
         backgroundColor: Theme.of(context).colorScheme.outlineVariant,
         actions: [
-          IconButton(
-              onPressed: () => (userSignedIn) ? _signOut() : _signIn(),
-              icon: (userSignedIn)
-                  ? const Icon(
-                      Icons.arrow_back,
-                      color: Colors.red,
-                    )
-                  : const Icon(
-                      Icons.play_arrow_outlined,
-                      color: Colors.green,
-                    )),
+          TextButton(
+            onPressed: () => (userSignedIn) ? _signOut() : _signIn(),
+            child: Text(userSignedIn ? 'Log out' : 'Log in'),
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all(Colors.white),
+              backgroundColor: MaterialStateProperty.all(Colors.blue),
+            ),
+          ),
+
         ],
       ),
       body: Column(children: [
@@ -146,11 +144,6 @@ class _MainScreenState extends State<MainScreen> {
               child: const Text("Show distance"))
         else
           Text('The distance is: $distanceToCurrentLocation km'),
-        TextButton(
-            onPressed: () {
-              _pickImageFromGallery();
-            },
-            child: Text("pick img")),
         if (userSignedIn)
           UserProfile(
             profileImage: _selectedImage,
@@ -175,16 +168,6 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ]),
     );
-  }
-
-  Future _pickImageFromGallery() async {
-    final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-
-    if (returnedImage == null) return;
-    setState(() {
-      //_selectedImage = File(returnedImage!.path);
-    });
   }
 
   void setDistance(double distance) {
