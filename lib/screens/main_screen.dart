@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:rentnew/model/product.dart';
 import 'package:get_it/get_it.dart';
 import '../service/AuthenticationService.dart';
@@ -56,32 +55,10 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void getProductsFromDatabase() async {
-    final ref = FirebaseDatabase.instance.ref();
-
-    try {
-      final snapshot = await ref.child('products').get();
-      if (snapshot.exists) {
-        for (final child in snapshot.children) {
-          Map<dynamic, dynamic> values = child.value as Map<dynamic, dynamic>;
-
-          Product prod = Product(
-              values["id"],
-              values["name"],
-              values["description"],
-              values["location"],
-              values["editPrivilege"]);
-
-          setState(() {
-            _products.add(prod);
-          });
-        }
-      } else {
-        print('No data available.');
-      }
-    } catch (error) {
-      print('Error fetching data: $error');
-    }
+  void getProductsFromDatabase() {
+    databaseService.getProductsFromDatabase().then((value) => setState(() {
+          _products = value;
+        }));
   }
 
   void _updateSignIn() {
@@ -120,7 +97,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(userSignedIn ? 'logged in' : 'logged out'),
+        // title: Text(userSignedIn ? 'logged in' : 'logged out'),
         backgroundColor: Theme.of(context).colorScheme.outlineVariant,
         actions: [
           if (userSignedIn)
@@ -211,7 +188,6 @@ class _MainScreenState extends State<MainScreen> {
         }
       }
     });
-
     databaseService.deleteProductByIdFromDatabase(productId);
   }
 }

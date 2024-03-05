@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 
 class ImageService {
   Future<String> getImageDownloadUrl(String imagePath)  async {
@@ -13,10 +11,8 @@ class ImageService {
 
   Future<String> uploadImageToFirebase(File image, String imagePath) async {
     try {
-      // String imageName = DateTime.now().millisecondsSinceEpoch.toString();
       Reference storageReference =
           FirebaseStorage.instance.ref().child(imagePath);
-      // FirebaseStorage.instance.ref().child('images/$imageName.jpg');
 
       UploadTask uploadTask = storageReference.putFile(image);
 
@@ -29,10 +25,8 @@ class ImageService {
         // Handle the error, for example, by returning a suitable error message
       });
 
-      // Wait for the upload task to complete
       await uploadTask;
 
-      // Retrieve the download URL
       String imageUrl = await storageReference.getDownloadURL();
 
       print('Image uploaded successfully. URL: $imageUrl');
@@ -40,7 +34,6 @@ class ImageService {
       return imageUrl;
     } catch (e) {
       print('Error uploading image to Firebase: $e');
-      // Return an empty string or a suitable error message
       return 'Error during image upload';
     }
   }

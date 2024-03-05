@@ -2,6 +2,34 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:rentnew/model/product.dart';
 
 class DatabaseService {
+  Future<List<Product>> getProductsFromDatabase() async {
+    List<Product> products = [];
+    final ref = FirebaseDatabase.instance.ref();
+
+    try {
+      final snapshot = await ref.child('products').get();
+      if (snapshot.exists) {
+        for (final child in snapshot.children) {
+          Map<dynamic, dynamic> values = child.value as Map<dynamic, dynamic>;
+
+          Product prod = Product(
+              values["id"],
+              values["name"],
+              values["description"],
+              values["location"],
+              values["editPrivilege"]);
+
+          products.add(prod);
+        }
+      } else {
+        print('No data available.');
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+    return products;
+  }
+
   void setProductToDatabase(Product product) {
     DatabaseReference postListRef = FirebaseDatabase.instance.ref("products");
     DatabaseReference newPostRef = postListRef.push();

@@ -69,19 +69,11 @@ class UserProfile extends StatelessWidget {
         await ImagePicker().pickImage(source: ImageSource.camera);
 
     if (returnedImage == null) return;
-    // setState(() {
-    //   selectedImage = File(returnedImage!.path);
-    // });
 
-    // Create a storage reference from our app
-    // final storageRef = FirebaseStorage.instance.ref();
     File img = File(returnedImage!.path);
-    String downloadUrl=await ImageService().uploadImageToFirebase(
+    String downloadUrl = await ImageService().uploadImageToFirebase(
         img, "images/${firebaseSingletonInstance.getCurrentUserEmail()}.jpg");
 
     updateProfileImage(downloadUrl);
-
-// Create a reference to 'images/mountains.jpg'
-//     final mountainImagesRef = storageRef.child("images/mountains.jpg");
   }
 }

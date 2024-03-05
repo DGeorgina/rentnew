@@ -8,7 +8,6 @@ class Item extends StatelessWidget {
   final Function deleteProduct;
   final firebaseSingletonInstance = GetIt.I.get<AuthenticationService>();
 
-  // const Item(Product product, {super.key, required this.product});
   Item({Key? key, required this.product, required this.deleteProduct})
       : super(key: key);
 
@@ -36,9 +35,6 @@ class Item extends StatelessWidget {
             icon: const Icon(Icons.delete_rounded),
             onPressed: () {
               deleteProduct(product.id);
-              // setState(() {
-              //   _products.removeAt(index);
-              // });
             },
           ),
         ),
