@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:rentnew/model/product.dart';
@@ -11,6 +9,7 @@ import 'package:rentnew/ui/item.dart';
 import 'package:rentnew/service/LocationService.dart';
 import 'package:rentnew/service/ImageService.dart';
 import 'package:rentnew/widgets/new_item.dart';
+import 'package:rentnew/service/DatabaseService.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -26,13 +25,13 @@ class _MainScreenState extends State<MainScreen> {
   bool userSignedIn = false;
   String _selectedImage = "";
   LocationService? locationService;
+  DatabaseService databaseService = DatabaseService();
 
   @override
   void initState() {
     super.initState();
     _selectedImage = "";
     locationService = LocationService(setDistance: setDistance);
-    // setProductToDatabase(Product(3, "Bike", "5 year old","ul. Partizanski Odredi"));
     getProductsFromDatabase();
     userSignedIn = (firebaseSingletonInstance.currentUser() != null);
     initializeProfilePicture();
@@ -85,19 +84,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void setProductToDatabase(Product product) {
-    DatabaseReference postListRef = FirebaseDatabase.instance.ref("products");
-    DatabaseReference newPostRef = postListRef.push();
-
-    newPostRef.set({
-      "id": product.id,
-      "name": product.name,
-      "description": product.description,
-      "location": product.position,
-      "editPrivilege": product.editPrivilege
-    });
-  }
-
   void _updateSignIn() {
     print("the user is signed in-----");
     bool val = firebaseSingletonInstance.currentUser() != null;
@@ -126,7 +112,6 @@ class _MainScreenState extends State<MainScreen> {
 
   _signOut() async {
     await firebaseSingletonInstance.signOut();
-
     _updateSignIn();
     print("Signed out!!!");
   }
@@ -138,7 +123,6 @@ class _MainScreenState extends State<MainScreen> {
         title: Text(userSignedIn ? 'logged in' : 'logged out'),
         backgroundColor: Theme.of(context).colorScheme.outlineVariant,
         actions: [
-
           if (userSignedIn)
             IconButton(
                 onPressed: () => _addNewItemFunction(),
@@ -176,9 +160,8 @@ class _MainScreenState extends State<MainScreen> {
             itemCount: _products.length,
             itemBuilder: (context, index) {
               return Item(
-                product: _products.elementAt(index),
-                deleteProduct: deleteProductById
-              );
+                  product: _products.elementAt(index),
+                  deleteProduct: deleteProductById);
             },
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, // number of items in each row
@@ -210,7 +193,7 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _products.add(product);
     });
-    setProductToDatabase(product);
+    databaseService.setProductToDatabase(product);
   }
 
   void setDistance(double distance) {
@@ -218,8 +201,6 @@ class _MainScreenState extends State<MainScreen> {
       distanceToCurrentLocation = distance;
     });
   }
-
-  void deleteItem(int productId) {}
 
   void deleteProductById(int productId) {
     setState(() {
@@ -231,73 +212,6 @@ class _MainScreenState extends State<MainScreen> {
       }
     });
 
-    DatabaseReference productsRef = FirebaseDatabase.instance.ref("products");
-
-    productsRef
-        .orderByChild("id")
-        .equalTo(productId)
-        .once()
-        .then((DatabaseEvent event) {
-      Map<dynamic, dynamic>? products = event.snapshot.value as Map?;
-
-      if (products != null) {
-        // Flag to ensure only the first matching product is deleted
-        bool firstProductFound = false;
-
-        // Iterate through the products that match the condition
-        products.forEach((key, value) {
-          if (!firstProductFound) {
-            DatabaseReference productRef = productsRef.child(key);
-
-            // Delete the product
-            productRef.remove().then((_) {
-              print("First product with name $productId deleted successfully");
-            }).catchError((error) {
-              print("Error deleting product: $error");
-            });
-
-            firstProductFound =
-                true; // Set the flag to true after deleting the first matching product
-          }
-        });
-      } else {
-        print("Product with id $productId not found");
-      }
-    }).catchError((error) {
-      print("Error querying products: $error");
-    });
+    databaseService.deleteProductByIdFromDatabase(productId);
   }
-
-// void deleteProductByName(String productName) {
-//   DatabaseReference productsRef = FirebaseDatabase.instance.ref("products");
-//
-//   productsRef.orderByChild("name").equalTo(productName).once().then((DatabaseEvent event) {
-//     Map<dynamic, dynamic>? products = event.snapshot.value as Map?;
-//
-//     if (products != null) {
-//       // Flag to ensure only the first matching product is deleted
-//       bool firstProductFound = false;
-//
-//       // Iterate through the products that match the condition
-//       products.forEach((key, value) {
-//         if (!firstProductFound) {
-//           DatabaseReference productRef = productsRef.child(key);
-//
-//           // Delete the product
-//           productRef.remove().then((_) {
-//             print("First product with name '$productName' deleted successfully");
-//           }).catchError((error) {
-//             print("Error deleting product: $error");
-//           });
-//
-//           firstProductFound = true; // Set the flag to true after deleting the first matching product
-//         }
-//       });
-//     } else {
-//       print("Product with name '$productName' not found");
-//     }
-//   }).catchError((error) {
-//     print("Error querying products: $error");
-//   });
-// }
 }

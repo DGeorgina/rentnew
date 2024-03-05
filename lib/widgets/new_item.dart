@@ -47,7 +47,7 @@ class _NewItemState extends State<NewItem> {
         children: [
           TextField(
             controller: _nameController,
-            decoration: InputDecoration(labelText: "Title:"),
+            decoration: InputDecoration(labelText: "Name:"),
             onSubmitted: (_) => _submitData,
           ),
           TextField(
