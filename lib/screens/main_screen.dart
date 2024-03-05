@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:rentnew/model/product.dart';
@@ -28,6 +30,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedImage = "";
     locationService = LocationService(setDistance: setDistance);
     // setProductToDatabase(Product(3, "Bike", "5 year old","ul. Partizanski Odredi"));
     getProductsFromDatabase();
@@ -135,6 +138,7 @@ class _MainScreenState extends State<MainScreen> {
         title: Text(userSignedIn ? 'logged in' : 'logged out'),
         backgroundColor: Theme.of(context).colorScheme.outlineVariant,
         actions: [
+
           if (userSignedIn)
             IconButton(
                 onPressed: () => _addNewItemFunction(),
@@ -173,6 +177,7 @@ class _MainScreenState extends State<MainScreen> {
             itemBuilder: (context, index) {
               return Item(
                 product: _products.elementAt(index),
+                deleteProduct: deleteProductById
               );
             },
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -213,4 +218,86 @@ class _MainScreenState extends State<MainScreen> {
       distanceToCurrentLocation = distance;
     });
   }
+
+  void deleteItem(int productId) {}
+
+  void deleteProductById(int productId) {
+    setState(() {
+      for (int i = 0; i < _products.length; i++) {
+        if (_products[i].id == productId) {
+          _products.remove(_products[i]);
+          break;
+        }
+      }
+    });
+
+    DatabaseReference productsRef = FirebaseDatabase.instance.ref("products");
+
+    productsRef
+        .orderByChild("id")
+        .equalTo(productId)
+        .once()
+        .then((DatabaseEvent event) {
+      Map<dynamic, dynamic>? products = event.snapshot.value as Map?;
+
+      if (products != null) {
+        // Flag to ensure only the first matching product is deleted
+        bool firstProductFound = false;
+
+        // Iterate through the products that match the condition
+        products.forEach((key, value) {
+          if (!firstProductFound) {
+            DatabaseReference productRef = productsRef.child(key);
+
+            // Delete the product
+            productRef.remove().then((_) {
+              print("First product with name $productId deleted successfully");
+            }).catchError((error) {
+              print("Error deleting product: $error");
+            });
+
+            firstProductFound =
+                true; // Set the flag to true after deleting the first matching product
+          }
+        });
+      } else {
+        print("Product with id $productId not found");
+      }
+    }).catchError((error) {
+      print("Error querying products: $error");
+    });
+  }
+
+// void deleteProductByName(String productName) {
+//   DatabaseReference productsRef = FirebaseDatabase.instance.ref("products");
+//
+//   productsRef.orderByChild("name").equalTo(productName).once().then((DatabaseEvent event) {
+//     Map<dynamic, dynamic>? products = event.snapshot.value as Map?;
+//
+//     if (products != null) {
+//       // Flag to ensure only the first matching product is deleted
+//       bool firstProductFound = false;
+//
+//       // Iterate through the products that match the condition
+//       products.forEach((key, value) {
+//         if (!firstProductFound) {
+//           DatabaseReference productRef = productsRef.child(key);
+//
+//           // Delete the product
+//           productRef.remove().then((_) {
+//             print("First product with name '$productName' deleted successfully");
+//           }).catchError((error) {
+//             print("Error deleting product: $error");
+//           });
+//
+//           firstProductFound = true; // Set the flag to true after deleting the first matching product
+//         }
+//       });
+//     } else {
+//       print("Product with name '$productName' not found");
+//     }
+//   }).catchError((error) {
+//     print("Error querying products: $error");
+//   });
+// }
 }
